@@ -34,12 +34,19 @@ export default function Post() {
       }
     }
 
-    await supabase.from("notes").insert({
+    const { error: insertError } = await supabase.from("notes").insert({
       title: title.trim() || "Untitled",
       content: content.trim(),
       author,
       image_url,
     })
+
+    if (insertError) {
+      console.error("Post failed:", insertError)
+      alert("Post failed: " + insertError.message)
+      setSaving(false)
+      return
+    }
 
     setSaving(false)
     router.push("/desktop")

@@ -61,14 +61,22 @@ export default function Home() {
     const ext = file.name.split(".").pop()
     const path = `${Date.now()}.${ext}`
     const { error } = await supabase.storage.from("photos").upload(path, file)
-    if (!error) {
-      const { data: urlData } = supabase.storage.from("photos").getPublicUrl(path)
-      await supabase.from("notes").insert({
-        title: "Photo",
-        content: "",
-        author,
-        image_url: urlData.publicUrl,
-      })
+    if (error) {
+      console.error("Upload failed:", error)
+      alert("Upload failed: " + error.message)
+      setSnapping(false)
+      return
+    }
+    const { data: urlData } = supabase.storage.from("photos").getPublicUrl(path)
+    const { error: insertError } = await supabase.from("notes").insert({
+      title: "Photo",
+      content: "",
+      author,
+      image_url: urlData.publicUrl,
+    })
+    if (insertError) {
+      console.error("Save failed:", insertError)
+      alert("Save failed: " + insertError.message)
     }
     setSnapping(false)
     if (cameraRef.current) cameraRef.current.value = ""
