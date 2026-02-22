@@ -339,6 +339,18 @@ export default function Home() {
             </div>
           </Win>
 
+          {/* Portrait window */}
+          <Win title="blind_mice_portrait.jpg">
+            <div style={{ border: "2px solid #7a8a9e", background: "#e0e6ee", overflow: "hidden" }}>
+              <img
+                src="/blind-mice-portrait.png"
+                alt="Three Blind Mice"
+                className="w-full"
+                style={{ display: "block", imageRendering: "auto" }}
+              />
+            </div>
+          </Win>
+
         </div>
 
         {/* Taskbar */}
