@@ -73,15 +73,15 @@ export default function Welcome() {
           />
 
           {/* Terminal content */}
-          <div className="relative z-10 w-full px-4" style={{ maxWidth: 220 }}>
+          <div className="relative z-10 w-full px-3" style={{ maxWidth: 180 }}>
             <p
-              className="text-center text-[7px] mb-0.5"
+              className="text-center text-[5px] mb-0.5"
               style={{ color: "#0a5c2a", textShadow: "none" }}
             >
               WELCOME TO
             </p>
             <p
-              className="text-center text-[10px] mb-2"
+              className="text-center text-[8px] mb-1.5"
               style={{ color: "#0a5c2a", textShadow: "none" }}
             >
               MOUSE LAB
@@ -90,7 +90,7 @@ export default function Welcome() {
             {/* ID field */}
             <div className="mb-1">
               <label
-                className="block text-[5px] mb-0.5"
+                className="block text-[4px] mb-0.5"
                 style={{ color: "#0a5c2a", opacity: 0.7 }}
               >
                 ENTER YOUR ID:
@@ -100,7 +100,7 @@ export default function Welcome() {
                 value={labId}
                 onChange={(e) => setLabId(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleEnter()}
-                className="w-full px-1 py-0.5 text-[7px]"
+                className="w-full px-1 py-0.5 text-[6px]"
                 style={{
                   background: "transparent",
                   border: "1px solid #0a5c2a",
@@ -116,7 +116,7 @@ export default function Welcome() {
             {/* Enter button */}
             <button
               onClick={handleEnter}
-              className="w-full py-1 text-[7px] uppercase"
+              className="w-full py-0.5 text-[6px] uppercase"
               style={{
                 background: booting ? "#0a5c2a" : "transparent",
                 border: "1px solid #0a5c2a",
@@ -203,7 +203,7 @@ export default function Welcome() {
 
             {/* Blinking cursor */}
             <p
-              className="mt-1 text-[5px]"
+              className="mt-0.5 text-[4px]"
               style={{ color: "#0a5c2a", opacity: 0.4 }}
             >
               C:\MOUSELAB&gt;{" "}
