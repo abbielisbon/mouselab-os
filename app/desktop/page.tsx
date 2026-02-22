@@ -161,7 +161,6 @@ export default function Home() {
               ref={cameraRef}
               type="file"
               accept="image/*"
-              capture="environment"
               className="hidden"
               onChange={handleSnap}
             />
