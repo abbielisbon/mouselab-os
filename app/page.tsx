@@ -1,135 +1,140 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 
-
-/* Reusable window component */
-function Win({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{ border: "2px solid #888", background: "#fff" }}>
-      {/* Title bar */}
-      <div
-        className="flex items-center justify-between px-2 py-[3px]"
-        style={{ background: "#e0e0e0", borderBottom: "2px solid #888" }}
-      >
-        <span className="text-[7px]" style={{ color: "#333" }}>{title}</span>
-        <div className="flex gap-1">
-          <div style={{ width: 8, height: 8, background: "#ccc", border: "1px solid #888" }} />
-          <div style={{ width: 8, height: 8, background: "#ccc", border: "1px solid #888" }} />
-        </div>
-      </div>
-      {/* Content */}
-      <div className="p-2">{children}</div>
-    </div>
-  )
-}
-
-export default function Home() {
+export default function Welcome() {
   const router = useRouter()
-  const [time, setTime] = useState(227)
-  const [running, setRunning] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const cameraRef = useRef<HTMLInputElement | null>(null)
+  const [labId, setLabId] = useState("")
+  const [booting, setBooting] = useState(false)
 
-  useEffect(() => {
-    if (running && time > 0) {
-      intervalRef.current = setInterval(() => {
-        setTime((t) => {
-          if (t <= 1) {
-            setRunning(false)
-            return 0
-          }
-          return t - 1
-        })
-      }, 1000)
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [running, time])
-
-  function play() {
-    if (time === 0) setTime(227)
-    setRunning(true)
+  function handleEnter() {
+    if (!labId.trim()) return
+    localStorage.setItem("mouselab-name", labId.trim())
+    setBooting(true)
+    setTimeout(() => {
+      router.push("/desktop")
+    }, 800)
   }
-  function pause() { setRunning(false) }
-  function stop() { setRunning(false); setTime(227) }
-
-  const mins = String(Math.floor(time / 60)).padStart(2, "0")
-  const secs = String(time % 60).padStart(2, "0")
-  const progress = ((227 - time) / 227) * 100
 
   return (
     <main
-      className="flex min-h-screen items-center justify-center p-2"
-      style={{
-        background: "repeating-linear-gradient(90deg, #d4d4d4 0px, #d4d4d4 2px, #c4c4c4 2px, #c4c4c4 4px)",
-      }}
+      className="relative overflow-hidden"
+      style={{ background: "#1a1a1a", height: "100dvh", width: "100vw" }}
     >
-      {/* iPhone-sized OS desktop */}
-      <div
-        className="flex w-full max-w-[390px] flex-col overflow-hidden"
+      {/* Computer photo — fills full viewport height, centered horizontally */}
+      <img
+        src="/computer.png"
+        alt=""
+        className="absolute"
         style={{
-          height: "min(844px, 100dvh - 16px)",
-          background: "#d0d0d0",
+          imageRendering: "auto",
+          height: "100dvh",
+          width: "auto",
+          left: "50%",
+          top: 0,
+          transform: "translateX(-50%)",
+        }}
+      />
+
+      {/*
+        Terminal overlay — locked to the CRT screen.
+        All positions are relative to the image which is
+        100dvh tall and (100dvh * 1024/1536) wide, centered.
+        Screen coordinates from 1024x1536 source:
+          left edge  ≈ 20%  of image width
+          top edge   ≈ 28%  of image height
+          width      ≈ 60%  of image width
+          height     ≈ 27%  of image height
+      */}
+      <div
+        className="absolute flex flex-col items-center justify-center"
+        style={{
           fontFamily: "var(--font-pixel), monospace",
-          border: "2px solid #888",
+          /* Center horizontally same as image */
+          left: "50%",
+          transform: "translateX(-50%)",
+          /* Vertical position relative to viewport = image height */
+          top: "32dvh",
+          /* Width relative to image width = 100dvh * (1024/1536) */
+          width: "calc(100dvh * (1024 / 1536) * 0.52)",
+          height: "22dvh",
+          overflow: "hidden",
+          borderRadius: "4px",
         }}
       >
-        {/* Menu bar */}
-        <div
-          className="flex items-center gap-3 px-2 py-[5px] shrink-0"
-          style={{ background: "#e8e8e8", borderBottom: "2px solid #888" }}
-        >
-          <span className="text-[7px]" style={{ color: "#333" }}>File</span>
-          <span className="text-[7px]" style={{ color: "#333" }}>Edit</span>
-          <span className="text-[7px]" style={{ color: "#333" }}>View</span>
-          <span className="text-[7px]" style={{ color: "#333" }}>Special</span>
-          <span className="ml-auto text-[6px]" style={{ color: "#666" }}>{mins}:{secs}</span>
-        </div>
+          {/* Scanlines */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background: "repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px)",
+              zIndex: 3,
+            }}
+          />
 
-        {/* Desktop icon strip */}
-        <div className="flex justify-center gap-4 px-3 py-2 shrink-0">
-          {[
-            { icon: "◈", label: "About" },
-            { icon: "✎", label: "Note" },
-            { icon: "⚙", label: "Settings" },
-            { icon: "▶", label: "Play" },
-          ].map((item) => (
-            <div key={item.label} className="flex flex-col items-center gap-1">
-              <div
-                className="flex items-center justify-center text-[12px]"
-                style={{ width: 28, height: 28, background: "#e8e8e8", border: "2px solid #888", color: "#444" }}
+          {/* Terminal content */}
+          <div className="relative z-10 w-full px-4" style={{ maxWidth: 220 }}>
+            <p
+              className="text-center text-[7px] mb-0.5"
+              style={{ color: "#0a5c2a", textShadow: "none" }}
+            >
+              WELCOME TO
+            </p>
+            <p
+              className="text-center text-[10px] mb-2"
+              style={{ color: "#0a5c2a", textShadow: "none" }}
+            >
+              MOUSE LAB
+            </p>
+
+            {/* ID field */}
+            <div className="mb-1">
+              <label
+                className="block text-[5px] mb-0.5"
+                style={{ color: "#0a5c2a", opacity: 0.7 }}
               >
-                {item.icon}
-              </div>
-              <span className="text-[5px]" style={{ color: "#444" }}>{item.label}</span>
+                ENTER YOUR ID:
+              </label>
+              <input
+                type="text"
+                value={labId}
+                onChange={(e) => setLabId(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleEnter()}
+                className="w-full px-1 py-0.5 text-[7px]"
+                style={{
+                  background: "transparent",
+                  border: "1px solid #0a5c2a",
+                  color: "#0a5c2a",
+                  fontFamily: "inherit",
+                  outline: "none",
+                  caretColor: "#0a5c2a",
+                }}
+                autoFocus
+              />
             </div>
-          ))}
-        </div>
 
-        {/* Windows area */}
-        <div className="flex flex-1 flex-col gap-2 overflow-hidden px-3 pb-2">
+            {/* Enter button */}
+            <button
+              onClick={handleEnter}
+              className="w-full py-1 text-[7px] uppercase"
+              style={{
+                background: booting ? "#0a5c2a" : "transparent",
+                border: "1px solid #0a5c2a",
+                color: booting ? "#00ff44" : "#0a5c2a",
+                fontFamily: "inherit",
+                cursor: "pointer",
+              }}
+            >
+              {booting ? "LOADING..." : "ENTER LAB"}
+            </button>
 
-          {/* About window */}
-          <Win title="about_mouselab.txt">
-            <p className="text-[7px] leading-relaxed" style={{ color: "#444" }}>
-              Cultural Intelligence Lab - Rodent Research
-            </p>
-            <p className="mt-1 text-[6px]" style={{ color: "#888" }}>
-              Three Blind Mice Division 2A Observation Deck
-            </p>
-          </Win>
-
-          {/* Mouse animation — green screen */}
-          <Win title="mouse_display.scr">
-              <div
-                className="relative overflow-hidden"
-                style={{ background: "#002a10", border: "2px inset #004400", height: 62 }}
-              >
-              {/* Cheese wedge — on ground */}
-              <div className="absolute cheese-chomp" style={{ right: 10, top: 28 }}>
+            {/* Animated mouse + cheese */}
+            <div
+              className="relative overflow-hidden mt-2"
+              style={{ height: 36, width: "100%" }}
+            >
+              {/* Cheese wedge */}
+              <div className="absolute cheese-chomp" style={{ right: 6, top: 18 }}>
                 <div className="grid grid-cols-7 gap-0" style={{ width: 21, height: 24 }}>
                   {[
                     0,0,0,0,0,0,1,
@@ -141,16 +146,16 @@ export default function Home() {
                     1,1,0,1,1,1,1,
                     1,1,1,1,1,1,1,
                   ].map((p, i) => (
-                    <div key={i} style={{ width: 3, height: 3, background: p ? "#33ff66" : "transparent" }} />
+                    <div key={i} style={{ width: 3, height: 3, background: p ? "#0a5c2a" : "transparent" }} />
                   ))}
                 </div>
               </div>
 
-              {/* Fat plump mouse scurrying toward cheese with a little tail behind */}
+              {/* Mouse scurrying */}
               <div
                 className="absolute"
                 style={{
-                  top: 23,
+                  top: 13,
                   left: 0,
                   animation: "mouseScurry 1.65s linear infinite",
                   zIndex: 2,
@@ -164,7 +169,7 @@ export default function Home() {
                         1,1,1,1,0,0,
                         0,0,1,1,1,1,
                       ].map((p, i) => (
-                        <div key={i} style={{ width: 3, height: 3, background: p ? "#33ff66" : "transparent" }} />
+                        <div key={i} style={{ width: 3, height: 3, background: p ? "#0a5c2a" : "transparent" }} />
                       ))}
                     </div>
                   </div>
@@ -181,178 +186,31 @@ export default function Home() {
                         0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
                         0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,
                       ].map((p, i) => (
-                        <div key={i} style={{ width: 3, height: 3, background: p ? "#33ff66" : "transparent" }} />
+                        <div key={i} style={{ width: 3, height: 3, background: p ? "#0a5c2a" : "transparent" }} />
                       ))}
                     </div>
                   </div>
 
-                  <div className="absolute" style={{ left: 60, top: 14, width: 3, height: 3, background: "#002a10" }} />
-                  <div className="absolute mouse-foot-flicker" style={{ left: 34, top: 27, width: 6, height: 3, background: "#33ff66" }} />
-                  <div className="absolute mouse-foot-flicker" style={{ left: 49, top: 27, width: 6, height: 3, background: "#33ff66", animationDelay: "-0.09s" }} />
+                  <div className="absolute" style={{ left: 60, top: 14, width: 3, height: 3, background: "transparent" }} />
+                  <div className="absolute mouse-foot-flicker" style={{ left: 34, top: 27, width: 6, height: 3, background: "#0a5c2a" }} />
+                  <div className="absolute mouse-foot-flicker" style={{ left: 49, top: 27, width: 6, height: 3, background: "#0a5c2a", animationDelay: "-0.09s" }} />
                 </div>
               </div>
 
               {/* Ground line */}
-              <div className="absolute bottom-1 left-0 right-0" style={{ height: 3, background: "#1a8836" }} />
+              <div className="absolute bottom-0 left-0 right-0" style={{ height: 2, background: "#0a5c2a", opacity: 0.5 }} />
             </div>
-          </Win>
 
-          {/* Observation deck window */}
-          <Win title="observation_deck.exe">
-            <input
-              ref={cameraRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-            />
-            <div className="grid grid-cols-3 gap-1">
-              <button
-                onClick={() => cameraRef.current?.click()}
-                className="py-1.5 text-[7px] uppercase"
-                style={{
-                  border: "2px solid #888",
-                  background: "#e8e8e8",
-                  color: "#666",
-                  boxShadow: "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
-                }}
-              >
-                photo
-              </button>
-              <button
-                onClick={() => router.push("/camera-roll")}
-                className="py-1.5 text-[6px] uppercase"
-                style={{
-                  border: "2px solid #888",
-                  background: "#e8e8e8",
-                  color: "#666",
-                  boxShadow: "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
-                }}
-              >
-                camera roll
-              </button>
-              <button
-                onClick={() => router.push("/notes")}
-                className="py-1.5 text-[7px] uppercase"
-                style={{
-                  border: "2px solid #888",
-                  background: "#e8e8e8",
-                  color: "#666",
-                  boxShadow: "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
-                }}
-              >
-                note
-              </button>
-            </div>
-            <button
-              onClick={() => router.push("/database")}
-              className="mt-1.5 w-full py-1.5 text-[6px] uppercase"
-              style={{
-                border: "2px solid #888",
-                background: "#e8e8e8",
-                color: "#333",
-                boxShadow: "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
-              }}
+            {/* Blinking cursor */}
+            <p
+              className="mt-1 text-[5px]"
+              style={{ color: "#0a5c2a", opacity: 0.4 }}
             >
-              View Database
-            </button>
-          </Win>
-
-          {/* Music player window */}
-          <Win title="mouselab_player.mp3">
-            {/* Now playing */}
-            <p className="text-[5px] uppercase" style={{ color: "#999" }}>Now playing</p>
-            <p className="text-[7px]" style={{ color: "#333" }}>Turn My Swag On — {mins}:{secs}</p>
-
-            {/* Scrubber */}
-            <div className="mt-1.5 mb-1" style={{ border: "2px solid #888", background: "#e8e8e8", height: 8 }}>
-              <div
-                className="h-full transition-all duration-1000"
-                style={{
-                  width: `${progress}%`,
-                  background: "#999",
-                }}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              {/* Time display */}
-              <span className="text-[6px]" style={{ color: "#666" }}>{mins}:{secs} / 3:47</span>
-
-              {/* Transport controls */}
-              <div className="flex gap-1">
-                <button
-                  onClick={stop}
-                  className="px-2 py-1 text-[7px]"
-                  style={{
-                    border: "2px solid #888",
-                    background: "#e8e8e8",
-                    color: "#333",
-                    boxShadow: "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
-                  }}
-                >
-                  ⏮
-                </button>
-                <button
-                  onClick={running ? pause : play}
-                  className="px-2 py-1 text-[7px]"
-                  style={{
-                    border: "2px solid #888",
-                    background: running ? "#bbb" : "#e8e8e8",
-                    color: "#333",
-                    boxShadow: running
-                      ? "inset 1px 1px 0 #999, inset -1px -1px 0 #ddd"
-                      : "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
-                  }}
-                >
-                  {running ? "⏸" : "▶"}
-                </button>
-                <button
-                  onClick={stop}
-                  className="px-2 py-1 text-[7px]"
-                  style={{
-                    border: "2px solid #888",
-                    background: "#e8e8e8",
-                    color: "#333",
-                    boxShadow: "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
-                  }}
-                >
-                  ⏭
-                </button>
-              </div>
-            </div>
-          </Win>
-        </div>
-
-        {/* Taskbar */}
-        <div
-          className="flex items-center justify-between px-2 py-[5px] shrink-0"
-          style={{ background: "#e0e0e0", borderTop: "2px solid #888" }}
-        >
-          <button
-            className="px-2 py-[2px] text-[6px]"
-            style={{
-              border: "2px solid #888",
-              background: "#e8e8e8",
-              color: "#333",
-              boxShadow: "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
-            }}
-          >
-            Start
-          </button>
-          <div className="flex gap-1">
-            <div
-              className="px-2 py-[2px] text-[5px]"
-              style={{ border: "1px solid #999", background: "#fff", color: "#444" }}
-            >
-              mouselab.exe
-            </div>
+              C:\MOUSELAB&gt;{" "}
+              <span style={{ animation: "blink 1s steps(1) infinite" }}>_</span>
+            </p>
           </div>
-          <span className="text-[5px]" style={{ color: "#666" }}>
-            {mins}:{secs}
-          </span>
         </div>
-      </div>
     </main>
   )
 }

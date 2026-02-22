@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #d0d0d0;
-  --foreground: #222;
+  --background: #c8d4e4;
+  --foreground: #2a3a4a;
 }
 
 @theme inline {
@@ -16,15 +16,14 @@
 }
 
 body {
-  background: repeating-linear-gradient(
-    90deg,
-    #d0d0d0 0px,
-    #d0d0d0 3px,
-    #c8c8c8 3px,
-    #c8c8c8 4px
-  );
+  background: linear-gradient(135deg, #b8c8d8 0%, #c8d4e2 40%, #d0dae8 100%);
   color: var(--foreground);
   font-family: var(--font-pixel), monospace;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
 @keyframes mouseScurry {

@@ -5,13 +5,18 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Win } from "@/app/components/Win"
 
-type FeedItem =
-  | { type: "photo"; id: string; image_url: string; created_at: string }
-  | { type: "note"; id: string; title: string; content: string; created_at: string }
+type Post = {
+  id: string
+  title: string
+  content: string
+  author?: string
+  image_url?: string
+  created_at: string
+}
 
 export default function Database() {
   const router = useRouter()
-  const [feed, setFeed] = useState<FeedItem[]>([])
+  const [feed, setFeed] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -19,25 +24,12 @@ export default function Database() {
   }, [])
 
   async function fetchFeed() {
-    const [photosRes, notesRes] = await Promise.all([
-      supabase.from("photos").select("*"),
-      supabase.from("notes").select("*"),
-    ])
+    const { data } = await supabase
+      .from("notes")
+      .select("*")
+      .order("created_at", { ascending: false })
 
-    const photos: FeedItem[] = (photosRes.data || []).map((p) => ({
-      type: "photo" as const,
-      ...p,
-    }))
-    const notes: FeedItem[] = (notesRes.data || []).map((n) => ({
-      type: "note" as const,
-      ...n,
-    }))
-
-    const combined = [...photos, ...notes].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )
-
-    setFeed(combined)
+    setFeed(data || [])
     setLoading(false)
   }
 
@@ -45,27 +37,31 @@ export default function Database() {
     <main
       className="flex min-h-screen items-center justify-center p-2"
       style={{
-        background: "repeating-linear-gradient(90deg, #d4d4d4 0px, #d4d4d4 2px, #c4c4c4 2px, #c4c4c4 4px)",
+        background: "linear-gradient(135deg, #b8c8d8 0%, #c8d4e2 40%, #d0dae8 100%)",
       }}
     >
       <div
         className="flex w-full max-w-[390px] flex-col overflow-hidden"
         style={{
           height: "min(844px, 100dvh - 16px)",
-          background: "#d0d0d0",
+          background: "linear-gradient(180deg, #d4dfed 0%, #c8d4e4 100%)",
           fontFamily: "var(--font-pixel), monospace",
-          border: "2px solid #888",
+          border: "2px solid #7a8a9e",
+          boxShadow: "2px 2px 0 rgba(0,0,0,0.15), inset 1px 1px 0 #e8eef6",
         }}
       >
         {/* Menu bar */}
         <div
           className="flex items-center gap-3 px-2 py-[5px] shrink-0"
-          style={{ background: "#e8e8e8", borderBottom: "2px solid #888" }}
+          style={{
+            background: "linear-gradient(180deg, #e8eef6 0%, #d8e0ec 100%)",
+            borderBottom: "2px solid #7a8a9e",
+          }}
         >
-          <span className="text-[7px]" style={{ color: "#333" }}>File</span>
-          <span className="text-[7px]" style={{ color: "#333" }}>Edit</span>
-          <span className="text-[7px]" style={{ color: "#333" }}>View</span>
-          <span className="text-[7px]" style={{ color: "#333" }}>Special</span>
+          <span className="text-[7px]" style={{ color: "#3a4a5a" }}>File</span>
+          <span className="text-[7px]" style={{ color: "#3a4a5a" }}>Edit</span>
+          <span className="text-[7px]" style={{ color: "#3a4a5a" }}>View</span>
+          <span className="text-[7px]" style={{ color: "#3a4a5a" }}>Special</span>
         </div>
 
         {/* Content */}
@@ -73,13 +69,13 @@ export default function Database() {
           <Win title="database_feed.exe">
             <div className="flex gap-1 mb-2">
               <button
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/desktop")}
                 className="py-1.5 px-3 text-[7px] uppercase"
                 style={{
-                  border: "2px solid #888",
-                  background: "#e8e8e8",
-                  color: "#333",
-                  boxShadow: "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
+                  border: "2px solid #7a8a9e",
+                  background: "#dce4ee",
+                  color: "#3a4a5a",
+                  boxShadow: "inset -1px -1px 0 #8a9aae, inset 1px 1px 0 #fff",
                 }}
               >
                 back
@@ -88,10 +84,10 @@ export default function Database() {
                 onClick={fetchFeed}
                 className="flex-1 py-1.5 text-[7px] uppercase"
                 style={{
-                  border: "2px solid #888",
-                  background: "#e8e8e8",
-                  color: "#333",
-                  boxShadow: "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
+                  border: "2px solid #7a8a9e",
+                  background: "#dce4ee",
+                  color: "#3a4a5a",
+                  boxShadow: "inset -1px -1px 0 #8a9aae, inset 1px 1px 0 #fff",
                 }}
               >
                 refresh
@@ -100,11 +96,11 @@ export default function Database() {
 
             <div className="overflow-y-auto" style={{ maxHeight: "calc(100dvh - 200px)" }}>
               {loading ? (
-                <p className="text-[6px] py-4 text-center" style={{ color: "#888" }}>
+                <p className="text-[6px] py-4 text-center" style={{ color: "#8a9aae" }}>
                   Loading...
                 </p>
               ) : feed.length === 0 ? (
-                <p className="text-[6px] py-4 text-center" style={{ color: "#888" }}>
+                <p className="text-[6px] py-4 text-center" style={{ color: "#8a9aae" }}>
                   No entries yet. Add photos or notes first.
                 </p>
               ) : (
@@ -113,45 +109,38 @@ export default function Database() {
                     <div
                       key={item.id}
                       className="p-1.5"
-                      style={{ border: "1px solid #bbb", background: "#f0f0f0" }}
+                      style={{ border: "1px solid #b8c4d4", background: "#f0f4f8" }}
                     >
-                      {item.type === "photo" ? (
-                        <>
-                          <p className="text-[5px] uppercase mb-1" style={{ color: "#999" }}>
-                            photo
-                          </p>
-                          <div
-                            style={{
-                              border: "2px solid #888",
-                              background: "#e8e8e8",
-                              overflow: "hidden",
-                              maxHeight: 120,
-                            }}
-                          >
-                            <img
-                              src={item.image_url}
-                              alt=""
-                              className="w-full object-cover"
-                              style={{ imageRendering: "auto", maxHeight: 120 }}
-                            />
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-[5px] uppercase mb-0.5" style={{ color: "#999" }}>
-                            note
-                          </p>
-                          <p className="text-[7px]" style={{ color: "#333" }}>
-                            {item.title}
-                          </p>
-                          {item.content && (
-                            <p className="text-[6px] mt-0.5" style={{ color: "#666" }}>
-                              {item.content.length > 100 ? item.content.slice(0, 100) + "..." : item.content}
-                            </p>
-                          )}
-                        </>
+                      <p className="text-[5px] uppercase mb-0.5" style={{ color: "#8a9aae" }}>
+                        {item.author || "anonymous"}
+                      </p>
+                      <p className="text-[7px]" style={{ color: "#3a4a5a" }}>
+                        {item.title}
+                      </p>
+                      {item.content && (
+                        <p className="text-[6px] mt-0.5" style={{ color: "#5a6a7e" }}>
+                          {item.content.length > 100 ? item.content.slice(0, 100) + "..." : item.content}
+                        </p>
                       )}
-                      <p className="text-[5px] mt-1" style={{ color: "#aaa" }}>
+                      {item.image_url && (
+                        <div
+                          className="mt-1"
+                          style={{
+                            border: "2px solid #7a8a9e",
+                            background: "#e0e6ee",
+                            overflow: "hidden",
+                            maxHeight: 120,
+                          }}
+                        >
+                          <img
+                            src={item.image_url}
+                            alt=""
+                            className="w-full object-cover"
+                            style={{ imageRendering: "auto", maxHeight: 120 }}
+                          />
+                        </div>
+                      )}
+                      <p className="text-[5px] mt-1" style={{ color: "#a0aab8" }}>
                         {new Date(item.created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -165,27 +154,27 @@ export default function Database() {
         {/* Taskbar */}
         <div
           className="flex items-center justify-between px-2 py-[5px] shrink-0"
-          style={{ background: "#e0e0e0", borderTop: "2px solid #888" }}
+          style={{ background: "#d0d8e6", borderTop: "2px solid #7a8a9e" }}
         >
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/desktop")}
             className="px-2 py-[2px] text-[6px]"
             style={{
-              border: "2px solid #888",
-              background: "#e8e8e8",
-              color: "#333",
-              boxShadow: "inset -1px -1px 0 #999, inset 1px 1px 0 #fff",
+              border: "2px solid #7a8a9e",
+              background: "#dce4ee",
+              color: "#3a4a5a",
+              boxShadow: "inset -1px -1px 0 #8a9aae, inset 1px 1px 0 #fff",
             }}
           >
             Start
           </button>
           <div
             className="px-2 py-[2px] text-[5px]"
-            style={{ border: "1px solid #999", background: "#fff", color: "#444" }}
+            style={{ border: "1px solid #8a9aae", background: "#f0f4f8", color: "#4a5a6a" }}
           >
             database.exe
           </div>
-          <span className="text-[5px]" style={{ color: "#666" }}>
+          <span className="text-[5px]" style={{ color: "#7a8a9e" }}>
             {feed.length} items
           </span>
         </div>
